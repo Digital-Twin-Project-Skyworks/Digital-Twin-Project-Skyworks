@@ -14,7 +14,7 @@ class MachineInterface:
         self.time_out = []                                      # for generating output
     
     def canServe(self):
-        return self.serving
+        return not self.serving
     
     def serve(self, lot):
         if (self.canServe()):
