@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 
 class MachineInterface:
-    def __init__(self, recipes):
+    def __init__(self, id, recipes, location):
         self.id = id                                            # String
         self.serving = False                                    # boolean
         self.recipes = recipes                                  # List<Recipe>
@@ -12,8 +12,14 @@ class MachineInterface:
         self.recipe_list = []                                   # for generating output
         self.time_in = []                                       # for generating output
         self.time_out = []                                      # for generating output
+        self.state =                                            # machine state (available for manufacturing or not)
+        self.location = location                                # String
     
+    def getState(self):
+        return self.state
+        
     def canServe(self):
+
         return not self.serving # should be not as it can't serve when it's serving
     
     def serve(self, lot):
