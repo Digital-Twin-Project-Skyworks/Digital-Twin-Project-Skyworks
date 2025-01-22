@@ -5,4 +5,4 @@ pip install sqlachemy
 pip install pandas
 
 ## running sequence
-# run sql_connection.py before running equn_chamber.py and equn_recp.py
+### run sql_connection.py before running equn_chamber.py and equn_recp.py
