@@ -13,6 +13,7 @@ class LotInterface:
         self.recipe_list = []                                   # for generating output
         self.time_in = []                                       # for generating output
         self.time_out = []                                      # for generating output
+        self.state =                                            # set default state
 
     def getRemainingTimeInSeconds(self):
         return (self.deadline - datetime.now()).total_seconds()
@@ -20,6 +21,9 @@ class LotInterface:
     def calculateACR(self, TCT):
         return self.getRemainingTimeInSeconds() / TCT
     
+    def getState(self):
+        return self.state
+        
     def getFutureEventList(self):
         df = pd.DataFrame({
             'MachineID': self.machineid_list,
