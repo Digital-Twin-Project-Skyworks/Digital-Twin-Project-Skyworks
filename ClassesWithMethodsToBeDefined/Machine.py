@@ -1,1 +1,4 @@
-# no idea yet
+from Interfaces import MachineInterface
+
+class Machine(MachineInterface):
+  
