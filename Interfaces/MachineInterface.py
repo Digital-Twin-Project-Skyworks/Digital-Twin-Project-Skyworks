@@ -31,6 +31,10 @@ class MachineInterface:
             self.time_out.append(datetime.now()+timedelta(days=recipe.process_time))
         return self, lot
 
+    def checkCompletion(self):
+        if self.serving and self.time_out and datetime.now() >= self.time_out[-1]:
+            self.serving = False
+
     def addToQueue(self, lot):
         if (self.canServe()):
             self.queue.append(lot)
