@@ -23,3 +23,4 @@ df_combined = pd.concat([df_child, df_filtered], ignore_index=True)
 print(df_combined)
 
 # df_combined: EQPID, DESCRIPTION, LOCATIONID, STATUS, EQPTYPE, ISPARENT, ISCHILD, PARENTEQPID, BATCHIDPREFIX
+df_combined.to_csv('equn_chamber.csv', index=False)
