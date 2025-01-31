@@ -15,6 +15,6 @@ df = pd.read_sql(query, con=engine)
 from equn_chamber import df_combined
 eqpid = df_combined['eqpid'].unique()
 df1 = df[df['eqpid'].isin(eqpid)].dropna()
-print(df1)
-
+df1.to_csv('equn_recp.csv', index=False)
+print('exported equn_recp.csv')
 # df1: recpname, eqptype, eqpid
