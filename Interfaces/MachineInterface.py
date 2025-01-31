@@ -19,7 +19,8 @@ class MachineInterface:
         return self.state
         
     def canServe(self):
-        return not self.serving
+
+        return not self.serving # should be not as it can't serve when it's serving
     
     def serve(self, lot):
         if (self.canServe()):
