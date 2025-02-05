@@ -12,7 +12,7 @@ class MachineInterface:
         self.recipe_list = []                                   # for generating output
         self.time_in = []                                       # for generating output
         self.time_out = []                                      # for generating output
-        self.state =                                            # machine state (available for manufacturing or not)
+        self.state =  1                                          # machine state (available for manufacturing or not)
         self.location = location                                # String
     
     def getState(self):
