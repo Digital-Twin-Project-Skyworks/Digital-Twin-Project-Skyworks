@@ -1,15 +1,14 @@
 class Recipe:
-    def __init__(self, id, process_time, toolswap_time):
+    def __init__(self, id, lower_bound, upper_bound):
         self.id = id                        # String
-        self.process_time = process_time    # String
-        self.toolswap_time = toolswap_time  # String
+        self.lower_bound = lower_bound      # int
+        self.upper_bound = upper_bound      # int
 
     def getId(self):
         return self.id
     
-    def getProcessTime(self):
-        return self.process_time
+    def getLower(self):
+        return self.lower_bound
     
-    def getToolswapTime(self):
-        return self.toolswap_time
-    
+    def getUpper(self):
+        return self.upper_bound    
