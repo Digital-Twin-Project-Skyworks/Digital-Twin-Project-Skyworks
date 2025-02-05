@@ -40,7 +40,7 @@ TravelTimes AS (
         A.LOTID,
         A.LOCATION AS LOCATION_A,
         B.LOCATION AS LOCATION_B,
-        (B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 * 60 AS TRAVEL_TIME_SECONDS
+        CAST((B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 * 60 AS INT) AS TRAVEL_TIME_SECONDS
     FROM
         FilteredData A
     JOIN
@@ -48,13 +48,15 @@ TravelTimes AS (
         ON A.LOTID = B.LOTID
         AND A.LOCATION <> B.LOCATION
         AND B.QUEUETIME > A.TRACKOUTTIME
-    WHERE (B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 * 60 < 28800
+    WHERE (B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 * 60 < 7200
 )
 SELECT 
     LOCATION_A,
     LOCATION_B,
-    AVG(TRAVEL_TIME_SECONDS) AS MEAN_TRAVEL_TIME_SECONDS,
-    COUNT(*) AS COUNT
+    COUNT(*) AS count,
+    AVG(TRAVEL_TIME_SECONDS) AS mean,
+    MIN(TRAVEL_TIME_SECONDS) AS lower_bound,
+    MAX(TRAVEL_TIME_SECONDS) AS upper_bound
 FROM TravelTimes
 GROUP BY LOCATION_A, LOCATION_B
 """
@@ -63,7 +65,7 @@ GROUP BY LOCATION_A, LOCATION_B
 df = pd.read_sql(query, con=engine)
 
 # Save as CSV file
-csv_filename = "travel_time_analysis.csv"
+csv_filename = "traveltime_all_version.csv"
 df.to_csv(csv_filename, index=False)
 
 print(f"Data has been saved to {csv_filename}")
