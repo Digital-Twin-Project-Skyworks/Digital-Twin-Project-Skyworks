@@ -1,0 +1,133 @@
+import pandas as pd
+import sqlalchemy as sql
+import json
+import numpy as np
+
+# db connection
+# username = "FPSINPUT"
+# password = "SkyOra#DwhSch#2021"
+# host = "SGDWHDEV.ad.skynet"
+# port = "1521"
+# sid = "SGDWHDEV"
+
+# engine = sql.create_engine(f"oracle+oracledb://{username}:{password}@{host}:{port}/{sid}")
+from sql_connection import engine
+engine.connect()
+
+# Define SQL query
+query = """
+WITH FilteredData AS (
+    -- Step 0: Filter the data by PRODAREA and valid locations, with non-NULL QUEUETIME and TRACKOUTTIME
+    SELECT 
+        LOTID, 
+        LOCATION, 
+        QUEUETIME, 
+        TRACKOUTTIME
+    FROM 
+        plld.hist@sgodsprd
+    WHERE 
+        PRODAREA IN ('SINGAPORE', 'SINGAPORE3')
+        AND QUEUETIME IS NOT NULL
+        AND TRACKOUTTIME IS NOT NULL
+        AND LOCATION IN ('SUBUNITS', 'SPACK', 'S3PACK', 'SGRIND', 'STEST', 'SPHOTO', 
+                         'SUB_PHOTO', 'S3TEST', 'S3ETCH', 'S3SPUT', 'S3SOLDER', 
+                         'S3PLTCHM', 'S3BOND', 'S3PHOTO', 'S3GRIND', 'SDICING', 
+                         'S3DICINGS', 'SOLDER', 'S3PLATE', 'SPLATES', 'SPUTTER', 
+                         'S3DRYETCH')
+        AND TIMESTAMPTIME BETWEEN TO_DATE('2024-01-01', 'YYYY-MM-DD') 
+                              AND TO_DATE('2025-01-01', 'YYYY-MM-DD')
+),
+TravelTimes AS (
+    SELECT 
+        A.LOTID,
+        A.LOCATION AS LOCATION_A,
+        B.LOCATION AS LOCATION_B,
+        (B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 AS TRAVEL_TIME_MINUTES -- Convert to minutes
+    FROM 
+        FilteredData A
+    JOIN 
+        FilteredData B
+        ON A.LOTID = B.LOTID
+        AND A.LOCATION <> B.LOCATION -- Ensure different locations
+        AND B.QUEUETIME > A.TRACKOUTTIME -- Ensure valid time sequence
+    WHERE 
+        (B.QUEUETIME - A.TRACKOUTTIME) * 24 * 60 < 28800 -- Travel time must be less than 28800 minutes
+),
+Statistics AS (
+    SELECT 
+        LOCATION_A,
+        LOCATION_B,
+        AVG(TRAVEL_TIME_MINUTES) AS MEAN_TRAVEL_TIME,
+        STDDEV(TRAVEL_TIME_MINUTES) AS SD_TRAVEL_TIME,
+        MIN(TRAVEL_TIME_MINUTES) AS MIN_TRAVEL_TIME,
+        MAX(TRAVEL_TIME_MINUTES) AS MAX_TRAVEL_TIME,
+        COUNT(*) AS SAMPLES
+    FROM 
+        TravelTimes
+    GROUP BY 
+        LOCATION_A, LOCATION_B
+),
+PossibleRoutes AS (
+    SELECT 
+        A.LOCATION AS LOCATION_A,
+        B.LOCATION AS LOCATION_B
+    FROM 
+        (SELECT DISTINCT LOCATION FROM FilteredData) A
+    CROSS JOIN 
+        (SELECT DISTINCT LOCATION FROM FilteredData) B
+    WHERE 
+        A.LOCATION <> B.LOCATION
+),
+UnexploredRoutes AS (
+    SELECT 
+        P.LOCATION_A,
+        P.LOCATION_B
+    FROM 
+        PossibleRoutes P
+    LEFT JOIN 
+        Statistics S
+        ON P.LOCATION_A = S.LOCATION_A AND P.LOCATION_B = S.LOCATION_B
+    WHERE 
+        S.LOCATION_A IS NULL -- If no stats exist, the route is unexplored
+)
+
+SELECT 
+    'Explored' AS ROUTE_STATUS,
+    LOCATION_A, 
+    LOCATION_B, 
+    MEAN_TRAVEL_TIME, 
+    SD_TRAVEL_TIME, 
+    MIN_TRAVEL_TIME, 
+    MAX_TRAVEL_TIME, 
+    SAMPLES
+FROM 
+    Statistics
+UNION ALL
+SELECT 
+    'Unexplored' AS ROUTE_STATUS,
+    LOCATION_A, 
+    LOCATION_B, 
+    NULL AS MEAN_TRAVEL_TIME, 
+    NULL AS SD_TRAVEL_TIME, 
+    NULL AS MIN_TRAVEL_TIME, 
+    NULL AS MAX_TRAVEL_TIME, 
+    0 AS SAMPLES
+FROM 
+    UnexploredRoutes
+ORDER BY 
+    ROUTE_STATUS, LOCATION_A, LOCATION_B;
+"""
+
+# Fetch data into Pandas DataFrame
+with engine.connect() as conn:
+    df = pd.read_sql(query, conn)
+
+# Save as JSON file
+json_filename = "travel_time_analysis.json"
+df.to_json(json_filename, orient="records", indent=4)
+
+# Save as CSV file
+csv_filename = "travel_time_analysis.csv"
+df.to_csv(csv_filename, index=False)
+
+print(f"Data has been saved to {json_filename} and {csv_filename}")
