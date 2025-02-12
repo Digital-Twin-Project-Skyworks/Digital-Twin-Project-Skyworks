@@ -1,5 +1,3 @@
-import queue
-from datetime import datetime, timedelta
 import pandas as pd
 
 class Machine:
@@ -8,15 +6,12 @@ class Machine:
         self.recipes = recipes                                  # List<Recipe>
         self.curr_recipe = ''                                   # default empty string
         self.serveEnd = 0
-        self.pq = queue.PriorityQueue()                         # PQ<Lot>
-        self.lotid_list = []                                    # for generating output
-        self.recipe_list = []                                   # for generating output
-        self.time_in = []                                       # for generating output
-        self.time_out = []                                      # for generating output
+        self.recipe_list = []                                   # capabilities of the machine
         self.state = 'NOWIP'                                    # machine state (available for manufacturing or not)
         self.location = location                                # String
         self.child = []                                         # list to store chambers/child
         self.curr_time = curr_time                              # current time of simulation in seconds
+        self.fel = []                                           # for generating output
     
     def getState(self):
         return self.state
