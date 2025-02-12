@@ -1,4 +1,4 @@
-import csv, json; import pandas as pd
+import csv, json, heapq; import pandas as pd
 from ClassesJustForHoldingData.Recipe import Recipe
 from ClassesWithMethodsToBeDefined.Lot import Lot
 from ClassesWithMethodsToBeDefined.Machine import Machine
@@ -38,6 +38,7 @@ def merge(dict1, df2):
 
 data1 = merge(temp, recptime) #This is the data needed for each machine
 all_machines = {}
+all_machines_pq = {}
 for index, row in data1.iterrows():
     if row["recpname"] in recipes:
         if row["eqpid"] in machines:
@@ -46,18 +47,24 @@ for index, row in data1.iterrows():
         else:
             machines[row["eqpid"]] = [recipes[row["recpname"]]]
             locs[row["eqpid"]] = row["locationid"]
+
 for key in machines:
-    all_machines[key] = Machine(key, machines[key], locs[key])
+    all_machines[key] = Machine(key, machines[key], locs[key], 0)
+    all_machines_pq[key] = []
 
 # Machines is a dictionary with the key as machine id, and value of recipe list    
 # Locs is a dictionary with the key as machine id and value of location id
 # all_machines is the machine id with the list of machines
 
 # Lot Initialisation
+lots = {}
 with open('Data/PartID_Recipe.json', 'r') as file:
     data = json.load(file)
 counter = 1000000
-for entry in data:
+v_match = {".01": 10, ".02": 14, ".03": 20, ".04": 90, ".05": 90} # dictionary with version as key and days as value
+for entry in data.values():
     part_num = entry['partname']
-    Lot(counter, part_num, 1, 2) #time values tbc
+    priority = entry['partversion']
+    seconds = v_match[priority] * 86400 #default unit is seconds, mult by 86400 to get secs
+    lots[counter] = Lot(counter, part_num, seconds, 0) #time values tbc
     counter += 1
