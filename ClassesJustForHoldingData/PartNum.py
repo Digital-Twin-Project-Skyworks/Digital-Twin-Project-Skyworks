@@ -18,10 +18,13 @@ class PartNum:
     
     def calculate_tct(self):
         tct = 0
-        df = pd.read_csv('../Data/recptime_active_version.csv')
+        df = pd.read_csv('Data/recptime_active_version.csv')
 
         for recp in self.sequenced_flow:
-            recptime = df.loc[df['recpname'] == recp, 'mean'].values[0]
+            try:
+                recptime = df.loc[df['recpname'] == recp, 'mean'].values[0]
+            except IndexError:
+                recptime = 0
             tct += recptime
 
         return tct
