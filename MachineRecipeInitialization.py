@@ -1,16 +1,25 @@
-import csv, json, heapq; import pandas as pd
+import csv, json; import pandas as pd
 from ClassesJustForHoldingData.Recipe import Recipe
 from ClassesWithMethodsToBeDefined.Lot import Lot
 from ClassesWithMethodsToBeDefined.Machine import Machine
+from queue import PriorityQueue
 
+#Dictionaries
+# Format:
+# Key: Value - dictionary_name
+# Lotid: lot instance - all_lots
+# Machine ID: machine instance - all_machines
+# Recipe ID : recipe instance - all_recipes
+# Recipe ID : PQ - all_recipes_pq
 
-# Recipe Initialisation
-recipes = {}
+all_recipes = {}
+all_recipes_pq = {}
 recptimes = pd.read_csv("Data/recptime_active_version.csv")
 for index, row in recptimes.iterrows():
     id = row["recpname"]
     recp = Recipe(id, int(row["active_lower_bound"]),  int(row["active_upper_bound"]))
-    recipes[id] = recp
+    all_recipes[id] = recp
+    all_recipes_pq[id] = PriorityQueue()
 
 # Machine Initialisation
 machines = {}
@@ -38,26 +47,25 @@ def merge(dict1, df2):
 
 data1 = merge(temp, recptime) #This is the data needed for each machine
 all_machines = {}
-all_machines_pq = {}
+
 for index, row in data1.iterrows():
-    if row["recpname"] in recipes:
+    if row["recpname"] in all_recipes:
         if row["eqpid"] in machines:
-            machines[row["eqpid"]].append(recipes[row["recpname"]])
+            machines[row["eqpid"]].append(all_recipes[row["recpname"]])
         
         else:
-            machines[row["eqpid"]] = [recipes[row["recpname"]]]
+            machines[row["eqpid"]] = [all_recipes[row["recpname"]]]
             locs[row["eqpid"]] = row["locationid"]
 
 for key in machines:
     all_machines[key] = Machine(key, machines[key], locs[key], 0)
-    all_machines_pq[key] = []
 
 # Machines is a dictionary with the key as machine id, and value of recipe list    
 # Locs is a dictionary with the key as machine id and value of location id
 # all_machines is the machine id with the list of machines
 
 # Lot Initialisation
-lots = {}
+all_lots = {}
 with open('Data/PartID_Recipe.json', 'r') as file:
     data = json.load(file)
 counter = 1000000
@@ -66,5 +74,8 @@ for entry in data.values():
     part_num = entry['partname']
     priority = entry['partversion']
     seconds = v_match[priority] * 86400 #default unit is seconds, mult by 86400 to get secs
-    lots[counter] = Lot(counter, part_num, seconds, 0) #time values tbc
+  
+    curr_lot = Lot(counter, part_num, seconds, 0) #time values tbc
+    curr_lot.updateACR()
+    all_lots[counter] = curr_lot # Dict w lot id: lot instance
     counter += 1
