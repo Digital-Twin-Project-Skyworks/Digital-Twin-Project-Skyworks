@@ -1,4 +1,4 @@
-import csv; import pandas as pd
+import csv, json; import pandas as pd
 from ClassesJustForHoldingData.Recipe import Recipe
 from ClassesWithMethodsToBeDefined.Lot import Lot
 from ClassesWithMethodsToBeDefined.Machine import Machine
@@ -9,9 +9,7 @@ recipes = {}
 recptimes = pd.read_csv("Data/recptime_active_version.csv")
 for index, row in recptimes.iterrows():
     id = row["recpname"]
-    process_time = (int(row["active_lower_bound"]) + int(row["active_upper_bound"])) / 2
-    toolswap_time = 0
-    recp = Recipe(id, process_time, toolswap_time)
+    recp = Recipe(id, int(row["active_lower_bound"]),  int(row["active_upper_bound"]))
     recipes[id] = recp
 
 # Machine Initialisation
@@ -54,3 +52,12 @@ for key in machines:
 # Machines is a dictionary with the key as machine id, and value of recipe list    
 # Locs is a dictionary with the key as machine id and value of location id
 # all_machines is the machine id with the list of machines
+
+# Lot Initialisation
+with open('Data/PartID_Recipe.json', 'r') as file:
+    data = json.load(file)
+counter = 1000000
+for entry in data:
+    part_num = entry['partname']
+    Lot(counter, part_num, 1, 2) #time values tbc
+    counter += 1
