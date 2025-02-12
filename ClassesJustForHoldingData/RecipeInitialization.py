@@ -1,7 +1,7 @@
 import csv, Recipe
 recipes = []
 
-with open("recptime_active_version.csv", 'utf-8') as file:
+with open('../Data/recptime_active_version.csv', 'rb') as file:
     reader = csv.DictReader()
     for row in reader:
         id = row["recpname"]
