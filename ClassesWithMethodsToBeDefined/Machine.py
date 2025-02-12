@@ -6,7 +6,6 @@ class Machine:
         self.recipes = recipes                                  # List<Recipe>
         self.location = location                                # String
         self.child = []                                         # list to store chambers/child
-
         self.curr_recipe = ''                                   # default empty string
         self.serveEnd = 0
         self.fel = []                                           # for generating output
